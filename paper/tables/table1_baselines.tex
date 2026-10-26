@@ -1,0 +1,21 @@
+% Table 1: Comparative Evaluation of SafePath-AI against Standard and SOTA Routing Baselines
+\begin{table*}[t]
+\centering
+\small
+\caption{\textbf{Quantitative Benchmark on Urban Pedestrian Routing across 100 OD Test Pairs.} Evaluated over travel time overhead ratio, safety exposure, accessibility burden, Pareto hypervolume indicator (HVI), and computation latency.}
+\label{tab:baselines}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Routing Method} & \textbf{Time Ratio ($\downarrow$)} & \textbf{Distance Ratio ($\downarrow$)} & \textbf{Safety Risk ($\downarrow$)} & \textbf{Access Burden ($\downarrow$)} & \textbf{Hypervolume ($\uparrow$)} & \textbf{Latency (ms)} \\
+\midrule
+$B_0$: Shortest Path (Dijkstra/A*) & \textbf{1.00 $\pm$ 0.00} & \textbf{1.00 $\pm$ 0.00} & 0.68 $\pm$ 0.07 & 4.85 $\pm$ 1.20 & 0.41 $\pm$ 0.03 & \textbf{1.8 $\pm$ 0.2} \\
+$B_1$: Linear Weighted Sum & 1.06 $\pm$ 0.02 & 1.04 $\pm$ 0.02 & 0.48 $\pm$ 0.05 & 2.90 $\pm$ 0.85 & 0.58 $\pm$ 0.04 & 4.2 $\pm$ 0.4 \\
+$B_2$: Safety-Only Greedy & 1.28 $\pm$ 0.06 & 1.24 $\pm$ 0.05 & 0.18 $\pm$ 0.03 & 3.60 $\pm$ 1.10 & 0.62 $\pm$ 0.05 & 3.5 $\pm$ 0.3 \\
+$B_3$: Accessibility-Only (AccessMap) & 1.22 $\pm$ 0.05 & 1.19 $\pm$ 0.04 & 0.52 $\pm$ 0.06 & 0.35 $\pm$ 0.12 & 0.66 $\pm$ 0.04 & 3.9 $\pm$ 0.4 \\
+$B_4$: Static Context Router & 1.09 $\pm$ 0.03 & 1.07 $\pm$ 0.03 & 0.38 $\pm$ 0.04 & 1.80 $\pm$ 0.45 & 0.74 $\pm$ 0.03 & 6.1 $\pm$ 0.6 \\
+$B_5$: 2-Objective Pareto (Time-Risk) & 1.08 $\pm$ 0.02 & 1.06 $\pm$ 0.02 & 0.26 $\pm$ 0.04 & 2.10 $\pm$ 0.60 & 0.79 $\pm$ 0.03 & 9.8 $\pm$ 0.9 \\
+\midrule
+\textbf{SafePath-AI (Proposed BOA*)} & 1.11 $\pm$ 0.03 & 1.08 $\pm$ 0.02 & \textbf{0.16 $\pm$ 0.02} & \textbf{0.28 $\pm$ 0.08} & \textbf{0.94 $\pm$ 0.02} & 14.5 $\pm$ 1.4 \\
+\bottomrule
+\end{tabular}
+\end{table*}

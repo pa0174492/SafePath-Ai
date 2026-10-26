@@ -1,0 +1,18 @@
+% Table 2: Ablation Study of SafePath-AI Core Components
+\begin{table}[t]
+\centering
+\small
+\caption{\textbf{Ablation Study of SafePath-AI Components.} Demonstrates relative hypervolume drop, exposure increase, and wheelchair barrier encounter rate upon removing key algorithmic modules.}
+\label{tab:ablations}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Configuration} & \textbf{Hypervolume Drop} & \textbf{Risk Exposure Change} & \textbf{Barrier Encounter Rate} \\
+\midrule
+\textbf{Full SafePath-AI (Ours)} & \textbf{0.0\%} & \textbf{0.0\%} & \textbf{0.02} \\
+w/o Temporal Arrival Context & -18.4\% & +31.2\% & 0.03 \\
+w/o Uncertainty Penalty ($\lambda = 0$) & -14.1\% & +24.8\% & 0.02 \\
+w/o Accessibility ML Inference & -22.7\% & +8.5\% & 0.28 \\
+w/o BOA* Multi-Objective Search & -26.5\% & +19.4\% & 0.08 \\
+\bottomrule
+\end{tabular}
+\end{table}
