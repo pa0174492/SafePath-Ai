@@ -37,6 +37,15 @@ class MobilityProfile(str, Enum):
     LOW_MOBILITY = "LOW_MOBILITY"
     ELDER_FRIENDLY = "ELDER_FRIENDLY"
     VISUAL_ASSIST = "VISUAL_ASSIST"
+    TWO_WHEELER = "TWO_WHEELER"
+    FOUR_WHEELER = "FOUR_WHEELER"
+    AUTO_RICKSHAW = "AUTO_RICKSHAW"
+
+class TransitMode(str, Enum):
+    WALK = "WALK"
+    TWO_WHEELER = "TWO_WHEELER"
+    FOUR_WHEELER = "FOUR_WHEELER"
+    AUTO_RICKSHAW = "AUTO_RICKSHAW"
 
 class SystemExecutionMode(str, Enum):
     DEMO = "DEMO"

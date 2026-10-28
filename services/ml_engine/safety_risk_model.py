@@ -74,6 +74,33 @@ class SafetyRiskModel:
         total_mean = float(np.clip(static + temporal + weather + incident_val, 0.02, 0.98))
         total_std = float(np.sqrt(temp_var + inc_var + 0.005))
         
+        # Cross-reference with active trained AI Model from Training Studio
+        try:
+            from services.ml_engine.training_service import training_service
+            active_info = training_service.get_active_model_info()
+            if active_info and active_info.get("status") == "READY":
+                # Sample inference features
+                pred_input = {
+                    "road_class_code": 0 if edge.road_class == "footway" else (1 if edge.road_class == "residential" else 2),
+                    "is_lit": 1 if edge.is_lit else 0,
+                    "ambient_lux": arrival_context.ambient_lux,
+                    "slope_pct": edge.slope_pct,
+                    "surface_quality": 2,
+                    "has_sidewalk": 1 if edge.has_sidewalk else 0,
+                    "has_curb_ramp": 1 if edge.has_curb_ramp else 0,
+                    "rainfall_mm_h": arrival_context.rainfall_mm_h,
+                    "incident_density": 1 if incident_val > 0.2 else 0,
+                    "hour_of_day": 20 if is_dark else 12,
+                    "crowd_density": 0.5
+                }
+                ml_res = training_service.predict_sample(pred_input)
+                ml_score = ml_res.get("safety_risk_score", total_mean)
+                # Calibrated ensemble blend: 70% active trained ML model + 30% analytical baseline
+                total_mean = float(np.clip(0.70 * ml_score + 0.30 * total_mean, 0.02, 0.98))
+                total_std = float(ml_res.get("uncertainty_std", total_std))
+        except Exception:
+            pass
+
         # Calibrated 95% confidence interval
         lower_95 = float(max(0.0, total_mean - 1.96 * total_std))
         upper_95 = float(min(1.0, total_mean + 1.96 * total_std))

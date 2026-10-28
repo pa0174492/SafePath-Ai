@@ -7,6 +7,7 @@ from .enums import (
     SurfaceType,
     CrossingType,
     MobilityProfile,
+    TransitMode,
     SystemExecutionMode,
     HazardSeverity,
     IncidentCategory
@@ -174,6 +175,15 @@ class RouteSegment(BaseModel):
     rainfall_at_arrival_mm_h: float
     lux_at_arrival: float
     
+    # Vehicle and Road Safety Attributes (OSRM Driving & Project Sidewalk AI)
+    vehicle_speed_kmh: Optional[float] = 35.0
+    traffic_level: Optional[str] = "FREE_FLOW"  # FREE_FLOW, MODERATE, CONGESTED
+    road_width_m: Optional[float] = 7.5
+    surface_defect_tags: List[str] = Field(default_factory=list)  # From sidewalk-tagger-ai-surfaceproblem
+    pothole_risk_pct: Optional[float] = 0.0
+    turn_instruction: Optional[str] = None
+    maneuver_type: Optional[str] = None
+    
     # Provenance
     provenance: List[RouteProvenanceRecord] = Field(default_factory=list)
     coords: List[Coordinate] = Field(default_factory=list)
@@ -192,6 +202,9 @@ class RouteMetrics(BaseModel):
     accessible_segments_pct: float
     uncertain_segments_pct: float
     potential_barrier_count: int
+    vehicle_safety_score: Optional[float] = 88.0
+    traffic_congestion_index: Optional[float] = 0.2
+    surface_defect_count: Optional[int] = 0
 
 class RouteExplanation(BaseModel):
     summary_text: str
@@ -226,6 +239,7 @@ class RouteRequest(BaseModel):
     city_tag: str = "seattle_downtown"
     algorithm: str = "ROBUST_PARETO"  # ROBUST_PARETO, BOA_STAR, WEIGHTED_SUM, SHORTEST_PATH
     include_counterfactuals: bool = False
+    transit_mode: Optional[str] = "WALK"  # WALK, TWO_WHEELER, FOUR_WHEELER, AUTO_RICKSHAW
 
 class RouteResponse(BaseModel):
     request_id: str

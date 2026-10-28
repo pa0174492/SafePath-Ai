@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     GOOGLE_MAPS_API_KEY: Optional[str] = None
     OPENWEATHER_API_KEY: Optional[str] = None
     
+    # MongoDB Big Data Lake Configuration
+    MONGODB_URI: str = "mongodb://localhost:27017"
+    MONGODB_DB_NAME: str = "safepath_ai_bigdata"
+    
     class Config:
         env_file = ".env"
         extra = "ignore"

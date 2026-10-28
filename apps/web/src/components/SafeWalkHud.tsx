@@ -122,7 +122,7 @@ export function SafeWalkHud({ candidate, isOpen, onClose, onSelectSegment }: Saf
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4 pointer-events-none">
+    <div className="fixed inset-x-0 bottom-6 z-[2000] flex justify-center px-4 pointer-events-none">
       <div className="bg-slate-900/95 backdrop-blur-md text-white rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-700/80 max-w-2xl w-full pointer-events-auto space-y-4 animate-in slide-in-from-bottom-6 duration-200">
         {/* HUD Top Bar */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-800">

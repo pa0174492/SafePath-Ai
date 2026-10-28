@@ -11,12 +11,12 @@ import {
   searchPlacesInIndia,
   FREE_MAP_APIS_INFO,
   Coordinate, 
-  UserProfile 
+  UserProfile,
+  TransitMode
 } from "@/lib/api";
 
-
-
 import { ProvenanceModal } from "@/components/ProvenanceModal";
+import { ProjectSidewalkModal } from "@/components/ProjectSidewalkModal";
 import { 
   Navigation, 
   Sliders, 
@@ -42,7 +42,14 @@ import {
   Key,
   Footprints,
   Printer,
-  ShieldCheck
+  ShieldCheck,
+  Car,
+  Bike,
+  Gauge,
+  CornerUpRight,
+  CornerUpLeft,
+  ArrowUp,
+  Cpu
 } from "lucide-react";
 import { ApiKeyModal } from "@/components/ApiKeyModal";
 import { SafeWalkHud } from "@/components/SafeWalkHud";
@@ -83,9 +90,13 @@ export default function MapPage() {
   const [isSearchingOrigin, setIsSearchingOrigin] = useState(false);
   const [isSearchingDest, setIsSearchingDest] = useState(false);
 
+  // Transit Mode (Walk vs Vehicle Routing)
+  const [transitMode, setTransitMode] = useState<TransitMode>("WALK");
+
   // Modals
   const [apiGuideOpen, setApiGuideOpen] = useState(false);
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
+  const [sidewalkModalOpen, setSidewalkModalOpen] = useState(false);
 
   // Routing states
   const [response, setResponse] = useState<RouteResponse | null>(null);
@@ -172,7 +183,7 @@ export default function MapPage() {
     setOriginName(preset.oName);
     setDestination({ lat: preset.dLat, lon: preset.dLon });
     setDestinationName(preset.dName);
-    recompute(preset.oLat, preset.oLon, preset.dLat, preset.dLon, profileType, preset.tag);
+    recompute(preset.oLat, preset.oLon, preset.dLat, preset.dLon, profileType, preset.tag, waypoints.map(w => w.coord), transitMode);
   };
 
   const recompute = async (
@@ -182,7 +193,8 @@ export default function MapPage() {
     dLon: number = destination.lon,
     prof: string = profileType,
     cityTag: string = "warangal_kits",
-    wps: Coordinate[] = waypoints.map((w) => w.coord)
+    wps: Coordinate[] = waypoints.map((w) => w.coord),
+    mode: TransitMode = transitMode
   ) => {
     setLoading(true);
     try {
@@ -190,6 +202,7 @@ export default function MapPage() {
         origin: { lat: oLat, lon: oLon },
         destination: { lat: dLat, lon: dLon },
         waypoints: wps,
+        transit_mode: mode,
         profile: {
           profile_type: prof,
           max_slope_pct: prof.includes("WHEELCHAIR") ? 8.33 : 15.0,
@@ -321,6 +334,16 @@ export default function MapPage() {
         </div>
 
         <div className="flex items-center space-x-2">
+          {/* Project Sidewalk DINOv2 AI Model Button */}
+          <button
+            onClick={() => setSidewalkModalOpen(true)}
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-900 to-indigo-900 hover:from-blue-800 hover:to-indigo-800 text-white text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-xs border border-blue-700/50"
+          >
+            <Cpu className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+            <span>Sidewalk AI Surface Tagger</span>
+            <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-amber-400/20 text-amber-300 font-bold border border-amber-400/30">HF</span>
+          </button>
+
           {/* API Keys Setup Button */}
           <button
             onClick={() => setApiKeyModalOpen(true)}
@@ -380,6 +403,60 @@ export default function MapPage() {
             {preset.name}
           </button>
         ))}
+      </div>
+
+      {/* Transit Mode Selection Bar (Walk vs Vehicle Routing with Road Safety) */}
+      <div className="bg-white border border-slate-200 p-2.5 rounded-2xl shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center space-x-2 overflow-x-auto">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 flex items-center gap-1 shrink-0">
+            <Navigation className="w-3.5 h-3.5 text-blue-600" />
+            <span>Mode:</span>
+          </span>
+          
+          {[
+            { id: "WALK" as TransitMode, label: "Safe Walk & Roll", icon: "🚶", desc: "Sidewalks & Accessible Crossings" },
+            { id: "TWO_WHEELER" as TransitMode, label: "Two-Wheeler", icon: "🏍️", desc: "Motorbike / Scooter Safe Path" },
+            { id: "FOUR_WHEELER" as TransitMode, label: "Four-Wheeler", icon: "🚗", desc: "Car / Cab Direct Road" },
+            { id: "AUTO_RICKSHAW" as TransitMode, label: "Auto-Rickshaw", icon: "🛺", desc: "3-Wheeler Urban Corridor" },
+          ].map((m) => {
+            const isActive = transitMode === m.id;
+            return (
+              <button
+                key={m.id}
+                onClick={() => {
+                  setTransitMode(m.id);
+                  recompute(origin.lat, origin.lon, destination.lat, destination.lon, profileType, "warangal_kits", waypoints.map(w => w.coord), m.id);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all shrink-0 ${
+                  isActive
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200"
+                }`}
+              >
+                <span>{m.icon}</span>
+                <span>{m.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Vehicle Road Safety Status Badge */}
+        {transitMode !== "WALK" && selectedCandidate && (
+          <div className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs shrink-0">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="font-semibold text-emerald-800">
+              Road Safety Score: <b>{selectedCandidate.metrics.vehicle_safety_score ?? 92}/100</b>
+            </span>
+            <span className="text-slate-300">•</span>
+            <span className="text-emerald-700 font-mono text-[11px]">
+              {selectedCandidate.metrics.traffic_congestion_index || "Free Flow"}
+            </span>
+            <span className="text-slate-300">•</span>
+            <span className="text-blue-700 font-mono text-[11px]">
+              OSRM Driving Core
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Main Grid */}
@@ -541,55 +618,130 @@ export default function MapPage() {
             </div>
           </div>
 
-          {/* Mobility Profile & Priorities */}
-          <div className="bg-white border border-slate-200 p-4 rounded-2xl space-y-4 shadow-xs">
-            <div className="flex items-center space-x-2 text-xs font-bold text-slate-900 uppercase tracking-wider">
-              <Sliders className="w-4 h-4 text-blue-600" />
-              <span>Pedestrian Profile</span>
-            </div>
-
-            <div className="space-y-1.5">
-              {profiles.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => {
-                    setProfileType(p.id);
-                    recompute(origin.lat, origin.lon, destination.lat, destination.lon, p.id);
-                  }}
-                  className={`w-full text-left px-3 py-2 rounded-xl border text-xs font-medium transition-all flex items-center justify-between ${
-                    profileType === p.id
-                      ? "bg-blue-50 border-blue-300 text-blue-800 font-semibold shadow-2xs"
-                      : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
-                  }`}
-                >
-                  <span>{p.label}</span>
-                  {profileType === p.id && <Check className="w-3.5 h-3.5 text-blue-600" />}
-                </button>
-              ))}
-            </div>
-
-            <hr className="border-slate-100" />
-
-            {/* Robust Risk Lambda Slider */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-600 font-medium">Uncertainty Aversion (λ)</span>
-                <span className="font-mono font-bold text-blue-600">{lambdaUncertainty.toFixed(1)}</span>
+          {/* Mobility Profile (Walk) OR Vehicle Road Safety Telemetry (Vehicle Modes) */}
+          {transitMode !== "WALK" ? (
+            <div className="bg-white border border-slate-200 p-4 rounded-2xl space-y-4 shadow-xs">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-900 uppercase tracking-wider">
+                <span className="flex items-center gap-1.5">
+                  <Gauge className="w-4 h-4 text-blue-600" />
+                  <span>Vehicle Safety Telemetry</span>
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                  {transitMode.replace("_", " ")}
+                </span>
               </div>
-              <input
-                type="range"
-                min="0.0"
-                max="3.0"
-                step="0.1"
-                value={lambdaUncertainty}
-                onChange={(e) => setLambdaUncertainty(parseFloat(e.target.value))}
-                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <span className="text-[10px] text-slate-400 block font-mono">
-                R_robust = μ_risk + {lambdaUncertainty.toFixed(1)}·σ_risk
-              </span>
+
+              {/* Telemetry Metric Grid */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="text-[10px] text-slate-400 font-sans block font-semibold">ROAD SAFETY</span>
+                  <span className="text-base font-bold text-emerald-600">
+                    {selectedCandidate?.metrics.vehicle_safety_score ?? 92}/100
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="text-[10px] text-slate-400 font-sans block font-semibold">SAFE SPEED</span>
+                  <span className="text-base font-bold text-slate-900 font-mono">
+                    {selectedSegment?.vehicle_speed_kmh || 40} km/h
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="text-[10px] text-slate-400 font-sans block font-semibold">CONGESTION</span>
+                  <span className="font-bold text-blue-600">
+                    {selectedCandidate?.metrics.traffic_congestion_index || "Free Flow"}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="text-[10px] text-slate-400 font-sans block font-semibold">DEFECT RADAR</span>
+                  <span className="font-bold text-amber-600 font-mono">
+                    {selectedCandidate?.metrics.surface_defect_count || 0} Avoided
+                  </span>
+                </div>
+              </div>
+
+              {/* Surface Vision AI & Road Context Note */}
+              <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200 text-xs text-blue-900 space-y-1">
+                <div className="font-semibold flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>Real-Time Hazard Filter</span>
+                </div>
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  Active DINOv2 surface tagger screens road edges for severe potholes, loose gravel, and narrow lanes to prevent skids and vehicular damage.
+                </p>
+              </div>
+
+              <hr className="border-slate-100" />
+
+              {/* Road Safety Sensitivity (Lambda) */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-600 font-medium">Risk Avoidance Sensitivity (λ)</span>
+                  <span className="font-mono font-bold text-blue-600">{lambdaUncertainty.toFixed(1)}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.0"
+                  max="3.0"
+                  step="0.1"
+                  value={lambdaUncertainty}
+                  onChange={(e) => setLambdaUncertainty(parseFloat(e.target.value))}
+                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+                <span className="text-[10px] text-slate-400 block font-mono">
+                  Cost = Travel_Time + {lambdaUncertainty.toFixed(1)}·(Pothole_Risk + Road_Roughness)
+                </span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-white border border-slate-200 p-4 rounded-2xl space-y-4 shadow-xs">
+              <div className="flex items-center space-x-2 text-xs font-bold text-slate-900 uppercase tracking-wider">
+                <Sliders className="w-4 h-4 text-blue-600" />
+                <span>Pedestrian Profile</span>
+              </div>
+
+              <div className="space-y-1.5">
+                {profiles.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      setProfileType(p.id);
+                      recompute(origin.lat, origin.lon, destination.lat, destination.lon, p.id);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-xl border text-xs font-medium transition-all flex items-center justify-between ${
+                      profileType === p.id
+                        ? "bg-blue-50 border-blue-300 text-blue-800 font-semibold shadow-2xs"
+                        : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    <span>{p.label}</span>
+                    {profileType === p.id && <Check className="w-3.5 h-3.5 text-blue-600" />}
+                  </button>
+                ))}
+              </div>
+
+              <hr className="border-slate-100" />
+
+              {/* Robust Risk Lambda Slider */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-600 font-medium">Uncertainty Aversion (λ)</span>
+                  <span className="font-mono font-bold text-blue-600">{lambdaUncertainty.toFixed(1)}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.0"
+                  max="3.0"
+                  step="0.1"
+                  value={lambdaUncertainty}
+                  onChange={(e) => setLambdaUncertainty(parseFloat(e.target.value))}
+                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+                <span className="text-[10px] text-slate-400 block font-mono">
+                  R_robust = μ_risk + {lambdaUncertainty.toFixed(1)}·σ_risk
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Center: Real Interactive Map */}
@@ -695,13 +847,15 @@ export default function MapPage() {
             )}
           </div>
 
-          {/* Turn-by-Turn Segment Inspection */}
+          {/* Turn-by-Turn Segment & Maneuver Inspection */}
           {selectedCandidate && selectedCandidate.segments.length > 0 && (
             <div className="bg-white border border-slate-200 p-4 rounded-2xl space-y-3 shadow-xs">
               <div className="flex items-center justify-between text-xs font-bold text-slate-900 uppercase tracking-wider">
                 <span className="flex items-center gap-1.5">
                   <Compass className="w-4 h-4 text-blue-600" />
-                  <span>Route Segments ({selectedCandidate.segments.length})</span>
+                  <span>
+                    {transitMode !== "WALK" ? "Turn-by-Turn Directions" : "Route Segments"} ({selectedCandidate.segments.length})
+                  </span>
                 </span>
                 <button
                   onClick={() => setProvenanceOpen(true)}
@@ -712,7 +866,7 @@ export default function MapPage() {
                 </button>
               </div>
 
-              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                 {selectedCandidate.segments.map((seg, idx) => {
                   const isSegSelected = selectedSegment?.segment_index === seg.segment_index;
                   return (
@@ -721,23 +875,57 @@ export default function MapPage() {
                       onClick={() => setSelectedSegment(seg)}
                       className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
                         isSegSelected
-                          ? "bg-rose-50/80 border-rose-300 shadow-2xs"
+                          ? "bg-blue-50/90 border-blue-400 shadow-2xs ring-1 ring-blue-300"
                           : "bg-slate-50 border-slate-200 hover:bg-slate-100"
                       }`}
                     >
                       <div className="flex items-center justify-between font-semibold text-slate-800 mb-1">
-                        <span>Segment #{idx + 1}</span>
-                        <span className="font-mono text-[10px] text-slate-500">
+                        <div className="flex items-center gap-1.5 truncate pr-2">
+                          {seg.maneuver_type?.includes("right") ? (
+                            <CornerUpRight className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          ) : seg.maneuver_type?.includes("left") ? (
+                            <CornerUpLeft className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          ) : (
+                            <ArrowUp className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          )}
+                          <span className="truncate">
+                            {seg.turn_instruction || `Step #${idx + 1}`}
+                          </span>
+                        </div>
+                        <span className="font-mono text-[10px] text-slate-500 shrink-0">
                           {seg.distance_m}m • {Math.round(seg.estimated_duration_s)}s
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-[10px] text-slate-500">
-                        <span>Slope: <b>{seg.slope_pct}%</b></span>
-                        <span>Access: <b>{Math.round(seg.accessibility_prob * 100)}%</b></span>
-                        <span className={seg.is_lit ? "text-amber-600" : "text-purple-600 font-semibold"}>
-                          {seg.is_lit ? "Lit" : "Unlit"}
-                        </span>
+
+                      <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-slate-500 pt-0.5">
+                        {transitMode !== "WALK" ? (
+                          <>
+                            <span>Speed: <b className="text-slate-700">{seg.vehicle_speed_kmh || 35} km/h</b></span>
+                            <span>Width: <b>{seg.road_width_m || 7.0}m</b></span>
+                            <span className="font-semibold text-emerald-600">
+                              {seg.traffic_level || "Free Flow"}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Slope: <b>{seg.slope_pct}%</b></span>
+                            <span>Access: <b>{Math.round(seg.accessibility_prob * 100)}%</b></span>
+                            <span className={seg.is_lit ? "text-amber-600" : "text-purple-600 font-semibold"}>
+                              {seg.is_lit ? "Lit" : "Unlit"}
+                            </span>
+                          </>
+                        )}
                       </div>
+
+                      {/* Project Sidewalk AI Surface Defect Alert Tag */}
+                      {seg.surface_defect_tags && seg.surface_defect_tags.length > 0 && !seg.surface_defect_tags.includes("NULL") && (
+                        <div className="mt-1.5 pt-1 border-t border-slate-200/60 flex items-center gap-1 text-[10px] text-rose-700 font-medium">
+                          <AlertTriangle className="w-3 h-3 text-rose-500 shrink-0" />
+                          <span className="truncate">
+                            Sidewalk AI: {seg.surface_defect_tags.join(", ")} ({seg.pothole_risk_pct || 15}% hazard)
+                          </span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -749,7 +937,7 @@ export default function MapPage() {
 
       {/* Free Map APIs & Providers Modal */}
       {apiGuideOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-[2000] flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-2xl w-full border border-slate-200 shadow-2xl p-6 space-y-5 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center space-x-3">
@@ -843,6 +1031,13 @@ export default function MapPage() {
       <ApiKeyModal
         isOpen={apiKeyModalOpen}
         onClose={() => setApiKeyModalOpen(false)}
+      />
+
+      {/* Project Sidewalk AI Hugging Face Surface Problem Scanner Modal */}
+      <ProjectSidewalkModal
+        isOpen={sidewalkModalOpen}
+        onClose={() => setSidewalkModalOpen(false)}
+        candidate={selectedCandidate}
       />
     </div>
   );

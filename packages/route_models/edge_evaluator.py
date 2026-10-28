@@ -85,6 +85,20 @@ class EdgeCostEvaluator:
         # Surface penalty
         if profile.avoid_unpaved and features.surface in [SurfaceType.UNPAVED, SurfaceType.GRAVEL, SurfaceType.COBBLESTONE]:
             access_burden += 3.0
+
+        # Project Sidewalk DINOv2 surface defect AI integration (Hugging Face ASSETS '24)
+        try:
+            from services.ml_engine.surface_vision_service import sidewalk_vision_service
+            surf_str = features.surface.value if hasattr(features.surface, 'value') else str(features.surface)
+            defect_res = sidewalk_vision_service.evaluate_edge_surface_defect(
+                surface_type=surf_str,
+                road_class=features.road_class,
+                slope_pct=features.slope_pct,
+                rainfall_mm_h=rain_intensity
+            )
+            access_burden += defect_res["pedestrian_burden_penalty"] * 2.2
+        except Exception:
+            pass
             
         # Sidewalk absence penalty for wheelchair / mobility profiles
         if profile.profile_type in [MobilityProfile.WHEELCHAIR_MANUAL, MobilityProfile.WHEELCHAIR_POWER, MobilityProfile.STROLLER]:
@@ -152,6 +166,29 @@ class EdgeCostEvaluator:
         total_risk_mean = min(1.0, static_risk + temporal_risk + env_risk + incident_risk)
         total_risk_std = math.sqrt(temporal_var + incident_var)
         
+        # Cross-reference with trained ML model and active model registry
+        try:
+            from services.ml_engine.safety_risk_model import SafetyRiskModel
+            if not hasattr(EdgeCostEvaluator, "_risk_model_singleton"):
+                EdgeCostEvaluator._risk_model_singleton = SafetyRiskModel()
+            
+            arrival_ctx = ContextSnapshot(
+                timestamp=arrival_time,
+                rainfall_mm_h=rain_intensity,
+                ambient_lux=base_lux,
+                air_quality_aqi=context.air_quality_aqi,
+                is_dark=is_night,
+                confidence=context.confidence,
+                source="DynamicArrivalTimeline"
+            )
+            m_mean, m_std, _, _, _ = EdgeCostEvaluator._risk_model_singleton.predict_risk(
+                features, arrival_ctx, incidents
+            )
+            total_risk_mean = float(m_mean)
+            total_risk_std = float(m_std)
+        except Exception:
+            pass
+
         # Robust Risk metric with lambda penalty
         robust_risk = total_risk_mean + profile.uncertainty_aversion_lambda * total_risk_std
         

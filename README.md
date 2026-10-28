@@ -20,6 +20,8 @@ SafePath-AI addresses five fundamental structural deficiencies in existing syste
 3. **Multi-Objective Dominance (BOA*)**: Replaces scalarized linear weighted-sums with exact Multi-Objective Bicriterion/Multi-Criteria Optimal A* pathfinding over a 6-objective vector.
 4. **Risk Uncertainty Optimization**: Optimizes robust risk $R_{\text{robust}} = \mu_{\text{risk}} + \lambda \sigma_{\text{risk}}$ and CVaR 95% tail metrics.
 5. **Counterfactuals & Resilience**: Enables interactive what-if scenario simulations (e.g. $+50\%$ rain, lighting outages, blocked crossings) and calculates Route Resilience Scores ($\rho$).
+6. **AI Model Studio & Training Lab**: Fine-tunes and trains open-source reference algorithms (LightGBM GBDT, PyTorch-Geometric ST-GCN, Bayesian Neural Networks, Calibrated Random Forests) on urban hazard and accessibility datasets (OSM India, MoRTH IRAD, Project Sidewalk) with real-time SHAP explainability and live deployment to the routing engine.
+
 
 ---
 
@@ -128,6 +130,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 5. Documentation & Artifacts
 
+- **[Technical Architecture & Data Engineering Specification](docs/TECHNICAL_SPECIFICATION.md)**: **The complete master reference specification** covering system workflows, technology stack breakdown, data pipelines & schemas, mathematical models, and full REST API contracts.
 - **[Project Charter](docs/PROJECT_CHARTER.md)**: Goals, scope, and ethical boundaries.
 - **[Research Gap Analysis](docs/RESEARCH_GAP.md)**: Literature review and taxonomy matrix.
 - **[Novelty Claims Matrix](docs/NOVELTY_CLAIMS.md)**: Clear separation of known vs adapted vs novel contributions.

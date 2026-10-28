@@ -37,3 +37,18 @@
    Dynamic arrival-time context evaluator ensuring $t_{\text{arrival}}(e_i) = t_0 + \sum \Delta t$.
 7. **`services/routing`**:
    Exact Multi-Objective Bicriterion/Multi-Criteria Optimal A* (`ParetoBOARouter`), counterfactual simulation engine (`CounterfactualEngine`), and resilience analyzer (`RouteResilienceAnalyzer`).
+8. **`AI Model Studio & Training Engine` (`services/ml_engine/training_service.py`)**:
+   Online training, fine-tuning, calibration, and registry management for open-source reference models (LightGBM GBDT, PyTorch-Geometric ST-GCN, Bayesian Neural Networks, Random Forest Ensembles) with real-time SHAP explainability and zero-downtime model activation for live routing.
+9. **`MongoDB Big Data Lake & Dataset Visibility Service` (`services/data_ingestion/mongodb_service.py` & `/datasets`)**:
+   Scalable MongoDB repository (`safepath_ai_bigdata.training_dataset`) managing high-volume pedestrian safety telemetry partitioned into Train (70%), Test (15%), and Validation (15%) splits, directly feeding model training and exposed via a dedicated Big Data Lake explorer.
+
+---
+
+## Complete Technical Specifications
+
+For full publication-grade architectural, algorithmic, and data engineering breakdowns, see:
+* **[Comprehensive Technical Specification](file:///docs/TECHNICAL_SPECIFICATION.md)** — Exhaustive master specification covering system workflows, technology matrices, tripartite data schemas, and mathematical formulations.
+* **[AI Model Architecture & Problem Solution Specification](file:///docs/AI_MODEL_SYSTEM_SPECIFICATION.md)** — Comprehensive theory, implementation, real-world case studies, and verification benchmarks for the AI Model Training Studio and safety risk engine.
+
+
+

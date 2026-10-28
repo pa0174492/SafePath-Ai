@@ -23,7 +23,10 @@ import {
   AlertTriangle,
   Radio,
   Key,
-  ShieldAlert
+  ShieldAlert,
+  BookOpen,
+  Cpu,
+  Database
 } from "lucide-react";
 import { ApiKeyModal } from "@/components/ApiKeyModal";
 
@@ -49,6 +52,8 @@ export function Sidebar() {
   const navItems = [
     { href: "/map", label: "Map & Navigation", icon: Map, badge: "Live" },
     { href: "/guardian", label: "Route Guardian", icon: Shield, badge: "Live GPS", isNew: true },
+    { href: "/ai-studio", label: "AI Model Studio", icon: Cpu, badge: "Train & Eval", isNew: true },
+    { href: "/datasets", label: "Big Data Lake", icon: Database, badge: "MongoDB", isNew: true },
     { href: "/safehavens", label: "Emergency SOS", icon: ShieldAlert, badge: "24/7 SOS" },
     { href: "/incidents", label: "Hazard Reports", icon: AlertTriangle, badge: "Live Feed" },
     { href: "/hotspots", label: "Accident Hotspots", icon: Radio, badge: "Radar AI" },
@@ -58,7 +63,9 @@ export function Sidebar() {
     { href: "/resilience", label: "Resilience Matrix", icon: Activity },
     { href: "/accessibility", label: "Accessibility ML", icon: Accessibility },
     { href: "/research", label: "Research Dashboard", icon: BarChart3 },
+    { href: "/docs", label: "Technical Docs", icon: BookOpen, badge: "Spec" },
   ];
+
 
   const cityPresets = [
     { name: "KITS Warangal (TS)", lat: 18.0542, lon: 79.5357, tag: "warangal_kits" },

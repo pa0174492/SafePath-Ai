@@ -957,7 +957,7 @@ export function RealMapViewer({
   const activeManeuver = activeNavSegment?.provenance?.find(p => p.attribute_name === "maneuver")?.source || "Follow campus street pathway";
 
   return (
-    <div className="relative w-full h-[600px] lg:h-[640px] bg-slate-100 rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col">
+    <div className="relative isolate z-0 w-full h-[600px] lg:h-[640px] bg-slate-100 rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col">
       {/* Dynamic Leaflet control clearance & guaranteed crisp tile visibility */}
       <style jsx global>{`
         .leaflet-bottom.leaflet-right {
@@ -1138,7 +1138,7 @@ export function RealMapViewer({
               ? { left: `${dockPos.x}px`, top: `${dockPos.y}px`, right: "auto", position: "absolute" }
               : { top: "16px", right: "16px", position: "absolute" }
           }
-          className={`jsx-4abc5a9b9b11d3bd absolute top-4 right-4 z-[1050] flex items-center space-x-2 select-none transition-shadow ${
+          className={`absolute top-4 right-4 z-20 flex items-center space-x-2 select-none transition-shadow ${
             isDraggingDock ? "opacity-95 scale-[1.02] shadow-xl ring-2 ring-blue-500/50" : ""
           }`}
         >
@@ -1352,7 +1352,7 @@ export function RealMapViewer({
 
       {/* Floating Quick Map Reload & Fix Pill (Always available anytime) */}
       {!isNavigating && (
-        <div className="absolute bottom-3.5 right-14 z-[990]">
+        <div className="absolute bottom-3.5 right-14 z-20">
           <button
             type="button"
             onClick={handleReloadAndResetMap}
@@ -1368,7 +1368,7 @@ export function RealMapViewer({
 
       {/* Real-Time Google Navigation Bottom Tray HUD */}
       {isNavigating && candidate && (
-        <div className="absolute bottom-0 inset-x-0 z-[1200] bg-white/98 backdrop-blur-xl border-t border-slate-200 px-4 py-3 shadow-2xl animate-in fade-in slide-in-from-bottom-2">
+        <div className="absolute bottom-0 inset-x-0 z-30 bg-white/98 backdrop-blur-xl border-t border-slate-200 px-4 py-3 shadow-2xl animate-in fade-in slide-in-from-bottom-2">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             {/* ETA & Distance Info */}
             <div className="flex items-center space-x-3">
@@ -1431,7 +1431,7 @@ export function RealMapViewer({
 
       {/* Docked Bottom Route Control Bar - Aligned flush with container */}
       {!isNavigating && candidate && (
-        <div className="absolute bottom-0 inset-x-0 z-[1050] bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-md transition-all">
+        <div className="absolute bottom-0 inset-x-0 z-20 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-md transition-all">
           <div className="px-3.5 py-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
             {/* Route Identification & Active Telemetry */}
             <div className="flex items-center space-x-2.5 min-w-0">
@@ -1456,11 +1456,14 @@ export function RealMapViewer({
                 {isDockedBarExpanded && (
                   hoveredSegment ? (
                     <p className="text-[10px] text-slate-600 font-mono truncate">
-                      {hoveredSegment.provenance?.find(p => p.attribute_name === "maneuver")?.source || `Segment #${hoveredSegment.segment_index + 1}`} ({hoveredSegment.distance_m}m) • Slope: {hoveredSegment.slope_pct}% • {hoveredSegment.is_lit ? "☀️ Lit" : "🌙 Unlit"} • Risk: {hoveredSegment.robust_risk}
+                      {hoveredSegment.turn_instruction || hoveredSegment.provenance?.find(p => p.attribute_name === "maneuver")?.source || `Segment #${hoveredSegment.segment_index + 1}`} ({hoveredSegment.distance_m}m)
+                      {hoveredSegment.vehicle_speed_kmh ? ` • 🚗 ${hoveredSegment.vehicle_speed_kmh} km/h` : ` • Slope: ${hoveredSegment.slope_pct}%`}
+                      {hoveredSegment.surface_defect_tags && hoveredSegment.surface_defect_tags.length > 0 && !hoveredSegment.surface_defect_tags.includes("NULL") ? ` • ⚠️ Sidewalk AI: ${hoveredSegment.surface_defect_tags.join(", ")}` : " • ✨ Smooth Road"}
+                      • {hoveredSegment.is_lit ? "☀️ Lit" : "🌙 Unlit"} • Risk: {hoveredSegment.robust_risk}
                     </p>
                   ) : (
                     <p className="text-[10px] text-slate-500 truncate">
-                      Road-following Pareto path • Click Navigate for live Google HUD
+                      Road-following Pareto path with real-time road safety &amp; defect analysis • Click Navigate for live HUD
                     </p>
                   )
                 )}
@@ -1479,6 +1482,12 @@ export function RealMapViewer({
                     <span className="text-[8px] text-slate-400 font-sans font-bold uppercase block leading-tight">Dist</span>
                     <span className="font-bold text-slate-900">{candidate.metrics.total_distance_m}m</span>
                   </div>
+                  {candidate.metrics.vehicle_safety_score !== undefined && (
+                    <div className="px-2 py-0.5 border-r border-slate-200">
+                      <span className="text-[8px] text-emerald-600 font-sans font-bold uppercase block leading-tight">Road Safety</span>
+                      <span className="font-bold text-emerald-600">{candidate.metrics.vehicle_safety_score}/100</span>
+                    </div>
+                  )}
                   <div className="px-2 py-0.5 border-r border-slate-200">
                     <span className="text-[8px] text-slate-400 font-sans font-bold uppercase block leading-tight">Risk</span>
                     <span className="font-bold text-blue-600">{candidate.metrics.robust_safety_risk}</span>

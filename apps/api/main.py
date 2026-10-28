@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from apps.api.config import settings
-from apps.api.routers import health, route, counterfactual, resilience, context, accessibility, research, config_router, hotspots, incidents, safehavens
+from apps.api.routers import health, route, counterfactual, resilience, context, accessibility, research, config_router, hotspots, incidents, safehavens, models, datasets
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -33,6 +33,10 @@ app.include_router(config_router.router, prefix=settings.API_PREFIX)
 app.include_router(hotspots.router, prefix=settings.API_PREFIX)
 app.include_router(incidents.router, prefix=settings.API_PREFIX)
 app.include_router(safehavens.router, prefix=settings.API_PREFIX)
+app.include_router(models.router, prefix=settings.API_PREFIX)
+app.include_router(datasets.router, prefix=settings.API_PREFIX)
+
+
 
 @app.get("/")
 def root():
